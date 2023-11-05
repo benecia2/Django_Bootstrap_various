@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-end mb-3">
+<form action="/list" method="get" class="form-inline">
+    <select name="field" id="field" class="form-control">
+        <option value="title">제목</option>
+        <option value="writer">작성자</option>
+        <option value="content">내용</option>
+        <option value="all">제목+작성자</option>
+    </select>
+    <script>
+        if ("{{field}} !=''"){
+            $('#field').val("{{field}}")
+        }
+    </script>
+    <input class="form-control mr-2" type="text" placeholder="Search" id="word" name="word" value="{{word}}"/>
+    <button class="btn btn-outline-primary">Search</button>
+</form>
+</div>
+
+<h2>BoardList ({{boardCount}})</h2>
+    <table class="table table-hover">
+        <thead class="thead-dark">
+            <tr>
+                <th>번호</th>
+                <th>제목</th>
+                <th>작성자</th>
+                <th>작성일</th>
+                <th>조회수</th>
+                <th>첨부파일</th>
+                <th>파일이미지</th>
+                <th>다운로드</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for board in boardList %}
+            <tr>
+                
+                <td>{{board.id}}</td>
+                
+                <td>
+                    <a href="/detail/{{board.id}}">{{board.title}}</a> &amp;
+                    <a href="/detail_id?id={{board.id}}">{{board.title}}</a>
+                </td>
+
+                <td>{{ board.writer }}</td>
+                <td>{{ board.post_date|date:'Y-m-d H:i' }}</td>
+                <td>{{ board.hit }}</td>
+                <td>{{ board.filename }}</td>
+                <td>
+                    {% if board.filesize > 0 %}
+                    <span class="_imgs" data-url="/download_count?id={{ board.id }}">
+                        <img src="{% static 'images/file.jpg' %}">
+                    </span>
+                    {% endif %}
+                </td>
+                <td class="downCnt">{{ board.down }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <!-- 이전 -->
+    {% if startPage > blockPage%}
+    <a href='?page={{startPage|add:-3}}&field={{field}}&word={{word}}'>이전</a>
+    {% endif %}
+
+    <!-- 페이지번호 -->
+    {% for i in range %}
+        {% if i == currentPage %}
+            [{{i}}]
+        {% else %}
+        <a href='?page={{i}}&field={{field}}&word={{word}}'>{{i}}</a>
+        {% endif %}
+
+    {% endfor %}
+
+    <!-- 다음 -->
+    {% if endPage < totPage %}
+    <a href='?page={{endPage|add:1}}&field={{field}}&word={{word}}'>다음</a>
+    {% endif %}
+
+
+    <script>
+        $("._imgs").on('click', function(){
+            _imgs = $(this)
+            $.ajax({
+                url:$(this).data('url'),    //$(this).attr('data-url')
+                type:'GET',
+                success:function(data){
+                    // alert(data.count)
+                    _imgs.parent().parent().find(".downCnt").text(data.count)
+                    location.href="/download?id="+data.id
+                }
+            })
+        })
+    </script>
+</div>
+{% endblock %}
